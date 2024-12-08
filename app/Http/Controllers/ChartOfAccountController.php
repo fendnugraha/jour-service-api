@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\ChartOfAccount;
 use App\Http\Resources\ChartOfAccountResource;
+use Illuminate\Support\Facades\Validator as FacadesValidator;
 
 class ChartOfAccountController extends Controller
 {
@@ -13,7 +14,7 @@ class ChartOfAccountController extends Controller
      */
     public function index()
     {
-        $chartOfAccounts = ChartOfAccount::orderBy('acc_code')->paginate(10);
+        $chartOfAccounts = ChartOfAccount::with(['account', 'warehouse'])->orderBy('acc_code')->paginate(10);
         return new ChartOfAccountResource($chartOfAccounts, true, "Successfully fetched chart of accounts");
     }
 
@@ -31,18 +32,30 @@ class ChartOfAccountController extends Controller
     public function store(Request $request)
     {
         $chartOfAccount = new ChartOfAccount();
-        $request->validate([
-            'name' => 'required|unique:chart_of_accounts,acc_name',
-            'category_id' => 'required',
-            'st_balance' => 'numeric',
+        $validateData = FacadesValidator::make($request->all(), [
+            'category_id' => 'required',  // Make sure category_id is present
+            'name' => ['required', 'string', 'max:255', 'unique:chart_of_accounts,acc_name'],  // Correct unique validation rule
+            'st_balance' => ['nullable', 'numeric'],  // Allow st_balance to be nullable
         ]);
 
-        $chartOfAccount->create([
-            'acc_code' => $chartOfAccount->acc_code($request->category_id),
-            'acc_name' => $request->name,
-            'account_id' => $request->category_id,
-            'st_balance' => $request->st_balance ?? 0,
-        ]);
+        if ($validateData->fails()) {
+            return response()->json([
+                'message' => $validateData->errors(),  // Return detailed error messages
+            ])->setStatusCode(422);
+        }
+
+        try {
+            $chartOfAccount->create([
+                'acc_code' => $chartOfAccount->acc_code($request->category_id),
+                'acc_name' => $request->name,
+                'account_id' => $request->category_id,
+                'st_balance' => $request->st_balance ?? 0,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Chart of account already exists',
+            ])->setStatusCode(409);
+        }
 
         return response()->json([
             'message' => 'Chart of account created successfully',
@@ -76,8 +89,28 @@ class ChartOfAccountController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ChartOfAccount $chartOfAccount)
+    public function destroy($id)
     {
-        //
+        $chartOfAccount = ChartOfAccount::find($id);
+
+        if (!$chartOfAccount) {
+            return response()->json([
+                'message' => 'Chart of account not found.',
+            ], 404); // Return a 404 error if not found
+        }
+
+        try {
+            // Deleting the Chart of Account
+            $chartOfAccount->delete();
+
+            // Return a success response
+            return response()->json([
+                'message' => 'Chart of account deleted successfully',
+            ], 204);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to delete chart of account. ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }
