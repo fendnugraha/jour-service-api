@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ChartOfAccount;
 use Illuminate\Http\Request;
+use App\Models\ChartOfAccount;
+use App\Http\Resources\ChartOfAccountResource;
 
 class ChartOfAccountController extends Controller
 {
@@ -12,7 +13,8 @@ class ChartOfAccountController extends Controller
      */
     public function index()
     {
-        //
+        $chartOfAccounts = ChartOfAccount::orderBy('acc_code')->paginate(10);
+        return new ChartOfAccountResource($chartOfAccounts, true, "Successfully fetched chart of accounts");
     }
 
     /**
@@ -28,7 +30,23 @@ class ChartOfAccountController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $chartOfAccount = new ChartOfAccount();
+        $request->validate([
+            'name' => 'required|unique:chart_of_accounts,acc_name',
+            'category_id' => 'required',
+            'st_balance' => 'numeric',
+        ]);
+
+        $chartOfAccount->create([
+            'acc_code' => $chartOfAccount->acc_code($request->category_id),
+            'acc_name' => $request->name,
+            'account_id' => $request->category_id,
+            'st_balance' => $request->st_balance ?? 0,
+        ]);
+
+        return response()->json([
+            'message' => 'Chart of account created successfully',
+        ])->setStatusCode(201);
     }
 
     /**

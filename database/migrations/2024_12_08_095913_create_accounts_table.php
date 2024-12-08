@@ -12,12 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('accounts', function (Blueprint $table) {
-            $table->id();
-            $table->string('code', 5)->unique();
-            $table->string('name', 90)->unique();
-            $table->tinyInteger('status', 1);
-            $table->string('type', 90);
-            $table->timestamps();
+            $table->id(); // Creates an auto-incrementing primary key
+            $table->string('code', 5)->unique(); // Code field, unique with a maximum length of 5
+            $table->string('name', 90)->unique(); // Name field, unique with a maximum length of 90
+            $table->string('status');
+            $table->string('type', 90); // Type field, string with a maximum length of 90
+            $table->timestamps(); // Automatically adds created_at and updated_at columns
         });
     }
 
