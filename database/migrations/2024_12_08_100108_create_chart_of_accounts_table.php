@@ -23,6 +23,7 @@ return new class extends Migration
             $table->foreignId('warehouse_id')->nullable()->constrained('warehouses')->onDelete('set null'); // Mengubah ke nullable dan set null jika warehouse dihapus
 
             $table->bigInteger('st_balance')->default(0);
+            $table->boolean('is_locked')->default(false);
             $table->timestamps();
         });
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Journal;
 use Illuminate\Http\Request;
 use App\Models\ChartOfAccount;
 use App\Http\Resources\ChartOfAccountResource;
@@ -40,7 +41,7 @@ class ChartOfAccountController extends Controller
 
         if ($validateData->fails()) {
             return response()->json([
-                'message' => $validateData->errors(),  // Return detailed error messages
+                'errors' => $validateData->errors(),  // Return detailed error messages
             ])->setStatusCode(422);
         }
 
@@ -93,6 +94,12 @@ class ChartOfAccountController extends Controller
     {
         $chartOfAccount = ChartOfAccount::find($id);
 
+        if ($chartOfAccount->is_locked) {
+            return response()->json([
+                'message' => 'Chart of account is locked and cannot be deleted.',
+            ], 403);
+        }
+
         if (!$chartOfAccount) {
             return response()->json([
                 'message' => 'Chart of account not found.',
@@ -100,17 +107,35 @@ class ChartOfAccountController extends Controller
         }
 
         try {
+            $journalExists = Journal::where('debt_code', $chartOfAccount->acc_code)
+                ->orWhere('cred_code', $chartOfAccount->acc_code)
+                ->exists();
+
+            if ($journalExists) {
+                return response()->json([
+                    'message' => 'Chart of account cannot be deleted because it is used in a journal entry.',
+                ], 400);
+            }
             // Deleting the Chart of Account
             $chartOfAccount->delete();
 
             // Return a success response
             return response()->json([
                 'message' => 'Chart of account deleted successfully',
-            ], 204);
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to delete chart of account. ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function deleteAll(Request $request)
+    {
+        $deletedCount = ChartOfAccount::whereIn('id', $request->ids)->delete();
+        return response()->json([
+            'message' => 'All chart of accounts deleted successfully',
+            'deleted_count' => $deletedCount
+        ], 200);
     }
 }

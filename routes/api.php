@@ -18,4 +18,5 @@ Route::group([
 
     Route::apiResource('accounts', ChartOfAccountController::class);
     Route::apiResource('category-accounts', AccountController::class);
+    Route::delete('delete-selected-account', [ChartOfAccountController::class, 'deleteAll']);
 });
