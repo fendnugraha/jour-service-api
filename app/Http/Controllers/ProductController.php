@@ -4,15 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Http\Resources\ProductResource;
 
 class ProductController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $products = Product::where('name', 'like', '%' . $request->search . '%')->paginate(5);
+        return new ProductResource($products, true, "Successfully fetched products");
     }
 
     /**

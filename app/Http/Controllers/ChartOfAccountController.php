@@ -66,9 +66,10 @@ class ChartOfAccountController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(ChartOfAccount $chartOfAccount)
+    public function show($id)
     {
-        //
+        $chartOfAccount = ChartOfAccount::with(['account', 'warehouse'])->find($id);
+        return new ChartOfAccountResource($chartOfAccount, true, "Successfully fetched chart of account");
     }
 
     /**
@@ -132,7 +133,27 @@ class ChartOfAccountController extends Controller
 
     public function deleteAll(Request $request)
     {
+        // Retrieve the records that are about to be deleted
+        $accounts = ChartOfAccount::whereIn('id', $request->ids)->get();
+
+        // Check if any of the records are locked
+        $lockedAccounts = $accounts->filter(function ($account) {
+            return $account->is_locked;
+        });
+
+        if ($lockedAccounts->isNotEmpty()) {
+            return response()->json(
+                [
+                    'message' => 'Some chart of accounts are locked and cannot be deleted.',
+                    'locked_accounts' => $lockedAccounts->pluck('id'), // Optionally return the ids of locked accounts
+                ],
+                403
+            );
+        }
+
+        // Perform the deletion if no accounts are locked
         $deletedCount = ChartOfAccount::whereIn('id', $request->ids)->delete();
+
         return response()->json([
             'message' => 'All chart of accounts deleted successfully',
             'deleted_count' => $deletedCount
