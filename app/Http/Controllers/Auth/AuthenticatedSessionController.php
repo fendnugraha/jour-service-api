@@ -23,7 +23,7 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         // Ambil data pengguna setelah login
-        $user = Auth::user();
+        $user = Auth::user()->load('role');
 
         // Membuat token menggunakan Laravel Sanctum
         $token = $user->createToken('Jour-api')->plainTextToken;
@@ -31,7 +31,7 @@ class AuthenticatedSessionController extends Controller
         // Kembalikan respons dalam bentuk Response (bukan JSON)
         return response([
             'message' => 'Login successful',
-            'user' => $user->load('role'),
+            'user' => $user,
             'token' => $token // Token untuk autentikasi API
         ], 200); // Mengembalikan status code 200
     }

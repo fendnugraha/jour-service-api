@@ -46,8 +46,8 @@ class OrderController extends Controller
             'phone_number' => $request->phone_number,
             'address' => $request->address,
             'description' => $request->description,
-            'warehouse_id' => $user->role->warehouse_id,
-            'user_id' => $user->id
+            'warehouse_id' => $request->warehouse_id,
+            'user_id' => $request->user_id
         ]);
 
         return response()->json([

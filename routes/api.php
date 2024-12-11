@@ -9,7 +9,7 @@ use App\Http\Controllers\ChartOfAccountController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
-    return $request->user();
+    return $request->user()->load('role');
 });
 
 Route::group([
