@@ -33,34 +33,30 @@ class ChartOfAccountController extends Controller
     public function store(Request $request)
     {
         $chartOfAccount = new ChartOfAccount();
-        $validateData = FacadesValidator::make($request->all(), [
-            'category_id' => 'required',  // Make sure category_id is present
-            'name' => ['required', 'string', 'max:255', 'unique:chart_of_accounts,acc_name'],  // Correct unique validation rule
-            'st_balance' => ['nullable', 'numeric'],  // Allow st_balance to be nullable
+        $request->validate(
+            [
+                'category_id' => 'required',  // Make sure category_id is present
+                'name' => 'required|string|max:255|unique:chart_of_accounts,acc_name',
+                'st_balance' => 'nullable|numeric',  // Allow st_balance to be nullable
+            ],
+            [
+                'category_id.required' => 'Category account tidak boleh kosong.',
+                'name.required' => 'Nama akun harus diisi.',
+                'name.unique' => 'Nama akun sudah digunakan, silakan pilih nama lain.',
+            ]
+        );
+
+        $chartOfAccount->create([
+            'acc_code' => $chartOfAccount->acc_code($request->category_id),
+            'acc_name' => $request->name,
+            'account_id' => $request->category_id,
+            'st_balance' => $request->st_balance ?? 0,
         ]);
-
-        if ($validateData->fails()) {
-            return response()->json([
-                'errors' => $validateData->errors(),  // Return detailed error messages
-            ])->setStatusCode(422);
-        }
-
-        try {
-            $chartOfAccount->create([
-                'acc_code' => $chartOfAccount->acc_code($request->category_id),
-                'acc_name' => $request->name,
-                'account_id' => $request->category_id,
-                'st_balance' => $request->st_balance ?? 0,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Chart of account already exists',
-            ])->setStatusCode(409);
-        }
 
         return response()->json([
             'message' => 'Chart of account created successfully',
-        ])->setStatusCode(201);
+            'chart_of_account' => $chartOfAccount
+        ], 201);
     }
 
     /**

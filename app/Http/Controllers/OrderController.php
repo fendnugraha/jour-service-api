@@ -29,7 +29,6 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
-        $user = Auth::user();
         $request->validate([
             'customer_name' => 'required',
             'phone_type' => 'required',
