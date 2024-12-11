@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
@@ -28,7 +29,31 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $user = Auth::user();
+        $request->validate([
+            'customer_name' => 'required',
+            'phone_type' => 'required',
+            'phone_number' => 'required|numeric',
+            'address' => 'required',
+            'description' => 'required|min:5|max:255',
+        ]);
+
+        $order_number = Order::getOrderNumber();
+        $order = Order::create([
+            'customer_name' => $request->customer_name,
+            'order_number' => $order_number,
+            'phone_type' => $request->phone_type,
+            'phone_number' => $request->phone_number,
+            'address' => $request->address,
+            'description' => $request->description,
+            'warehouse_id' => $user->role->warehouse_id,
+            'user_id' => $user->id
+        ]);
+
+        return response()->json([
+            'message' => 'Order created successfully',
+            'order' => $order
+        ]);
     }
 
     /**
