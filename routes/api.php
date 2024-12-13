@@ -24,5 +24,5 @@ Route::group([
 
     Route::apiResource('products', ProductController::class);
 
-    Route::post('orders', [OrderController::class, 'store']);
+    Route::apiResource('orders', OrderController::class);
 });

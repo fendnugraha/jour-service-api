@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\TransactionResource;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,7 +14,9 @@ class OrderController extends Controller
      */
     public function index()
     {
-        //
+        $orders = Order::latest()->paginate(5);
+
+        return new TransactionResource($orders, true, "Successfully fetched orders");
     }
 
     /**
