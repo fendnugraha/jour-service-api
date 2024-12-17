@@ -6,6 +6,7 @@ use App\Models\Role;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Models\User;
 use App\Models\Contact;
+use App\Models\ProductCategory;
 use App\Models\Warehouse;
 use Illuminate\Database\Seeder;
 use Database\Seeders\AccountSeeder;
@@ -58,10 +59,15 @@ class DatabaseSeeder extends Seeder
             'Description' => 'General Customer',
         ]);
 
+        ProductCategory::create([
+            'name' => 'General',
+            'prefix' => 'GNR',
+        ]);
+
         $this->call([
             AccountSeeder::class,
             ChartOfAccountSeeder::class,
-            ProductSeeder::class
+            // ProductSeeder::class
         ]);
     }
 }

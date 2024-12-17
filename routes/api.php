@@ -6,6 +6,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ChartOfAccountController;
+use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
@@ -23,6 +24,7 @@ Route::group([
     Route::delete('delete-selected-account', [ChartOfAccountController::class, 'deleteAll']);
 
     Route::apiResource('products', ProductController::class);
+    Route::apiResource('product-categories', ProductCategoryController::class);
 
     Route::apiResource('orders', OrderController::class);
 });

@@ -13,7 +13,7 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $products = Product::where('name', 'like', '%' . $request->search . '%')->paginate(5);
+        $products = Product::where('name', 'like', '%' . $request->search . '%')->paginate(5)->onEachSide(0);
         return new ProductResource($products, true, "Successfully fetched products");
     }
 
@@ -30,7 +30,28 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $product = new Product();
+        $request->validate(
+            [
+                'name' => 'required|string|max:255|unique:products,name',
+                'category' => 'required',  // Make sure category_id is present
+                'price' => 'required|numeric',
+                'cost' => 'required|numeric',
+            ]
+        );
+
+        $product->create([
+            'code' => $product->newCode($request->category),
+            'name' => $request->name,
+            'category' => $request->category,
+            'price' => $request->price,
+            'cost' => $request->cost
+        ]);
+
+        return response()->json([
+            'message' => 'Product created successfully',
+            'product' => $product
+        ], 201);
     }
 
     /**
