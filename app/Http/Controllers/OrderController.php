@@ -63,7 +63,10 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
-        //
+        return response()->json([
+            'order' => $order,
+            'message' => 'Successfully fetched order'
+        ]); // Gunakan 200 untuk respon sukses "OK"
     }
 
     /**
