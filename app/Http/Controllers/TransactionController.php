@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\Order;
 use App\Models\Journal;
 use App\Models\Product;
+use App\Models\Receivable;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use App\Models\WarehouseStock;
@@ -21,7 +23,7 @@ class TransactionController extends Controller
         //
     }
 
-    private function addToJournal($invoice_num, $debt, $cred, $amount, $description = 'Penjualan Barang', $serial = null, $rcv = null)
+    private function addToJournal($invoice_num, $debt, $cred, $amount, $description = 'Penjualan Barang', $serial = null, $rcv = null, $user_id, $warehouse_id)
     {
         $journal = new Journal([
             'date_issued' => now(),
@@ -35,8 +37,8 @@ class TransactionController extends Controller
             'rcv_pay' => $rcv,
             'payment_status' => $rcv ? 0 : null,
             'payment_nth' => $rcv ? 0 : null,
-            'user_id' => $request->user_id,
-            'warehouse_id' => $request->warehouse_id,
+            'user_id' => $user_id ?? auth()->user()->id,
+            'warehouse_id' => $warehouse_id ?? auth()->user()->role->warehouse_id,
             'serial_number' => $serial,
         ]);
 
@@ -93,6 +95,30 @@ class TransactionController extends Controller
         //
     }
 
+    public function addToReceivable($invoice, $account, $amount, $description, $user, $dateIssued, $dueDate, $contact_id)
+    {
+        DB::beginTransaction();
+        try {
+            Receivable::create([
+                'date_issued' => $dateIssued,
+                'due_date' => Carbon::parse($dateIssued)->addDays($dueDate),
+                'invoice' => $invoice,
+                'description' => $description ?? 'Piutang Usaha',
+                'bill_amount' => $amount,
+                'payment_amount' => 0,
+                'payment_status' => 0,
+                'payment_nth' => 0,
+                'contact_id' => $contact_id,
+                'user_id' => $user->id,
+                'account_code' => $account
+            ]);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+        }
+    }
+
     public function checkoutOrder(Request $request)
     {
         $order = Order::findOrFail($request->order_id);
@@ -106,6 +132,7 @@ class TransactionController extends Controller
             'payment_method' => 'required',
             'user_id' => 'required',
             'warehouse_id' => 'required',
+            'contact_id' => 'required',
         ]);
         $journal = new Journal();
         $invoice_num = $journal->sales_journal();
@@ -135,13 +162,13 @@ class TransactionController extends Controller
                     // $initTotal = $initial_stock * $initial_cost;
 
                     if ($request->payment_method == 'Credit') {
-                        $request->addToReceivable($invoice_num, $request->account, $jual, 'Penjualan Barang (Code:' . $product->code . ') ' . $product->name . ' (' . -$item['qty'] . 'Pcs)', auth()->user(), date('Y-m-d H:i'), $request->dueDate);
+                        $this->addToReceivable($invoice_num, $request->account, $jual, 'Penjualan Barang (Code:' . $product->code . ') ' . $product->name . ' (' . -$item['qty'] . 'Pcs)', $request->user_id, date('Y-m-d H:i'), $request->dueDate, $request->contact_id);
                         $rcv = 'Receivable';
                     }
 
-                    $this->addToJournal($invoice_num, $request->account, "40100-001", $jual, 'Penjualan Barang (Code:' . $product->code . ') ' . $product->name . ' (' . -$item['qty'] . 'Pcs)', $serial, $rcv ?? null);
+                    $this->addToJournal($invoice_num, $request->account, "40100-001", $jual, 'Penjualan Barang (Code:' . $product->code . ') ' . $product->name . ' (' . -$item['qty'] . 'Pcs)', $serial, $rcv ?? null, $request->user_id, $request->warehouse_id);
 
-                    $this->addToJournal($invoice_num, "50100-001", "10600-001", $modal, 'Pembelian Barang (Code:' . $product->code . ') ' . $product->name . ' (' . -$item['qty'] . 'Pcs)', $serial, $rcv ?? null);
+                    $this->addToJournal($invoice_num, "50100-001", "10600-001", $modal, 'Pembelian Barang (Code:' . $product->code . ') ' . $product->name . ' (' . -$item['qty'] . 'Pcs)', $serial, $rcv ?? null, $request->user_id, $request->warehouse_id);
 
 
                     $transaction = new Transaction([
