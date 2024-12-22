@@ -8,6 +8,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ChartOfAccountController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\TransactionController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user()->load('role');
@@ -27,4 +28,5 @@ Route::group([
     Route::apiResource('product-categories', ProductCategoryController::class);
 
     Route::apiResource('orders', OrderController::class);
+    Route::apiResource('transactions', TransactionController::class);
 });
