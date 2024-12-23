@@ -155,4 +155,10 @@ class ChartOfAccountController extends Controller
             'deleted_count' => $deletedCount
         ], 200);
     }
+
+    public function getCashAndBank()
+    {
+        $chartOfAccounts = ChartOfAccount::whereIn('account_id', [1, 2])->get();
+        return new ChartOfAccountResource($chartOfAccounts, true, "Successfully fetched chart of accounts");
+    }
 }

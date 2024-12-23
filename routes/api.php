@@ -21,6 +21,7 @@ Route::group([
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy']);
 
     Route::apiResource('accounts', ChartOfAccountController::class);
+    Route::get('get-cash-and-bank', [ChartOfAccountController::class, 'getCashAndBank']);
     Route::apiResource('category-accounts', AccountController::class);
     Route::delete('delete-selected-account', [ChartOfAccountController::class, 'deleteAll']);
 
