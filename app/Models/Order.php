@@ -32,4 +32,9 @@ class Order extends Model
     {
         return $this->belongsTo(Contact::class);
     }
+
+    public function journal()
+    {
+        return $this->hasMany(Journal::class, 'invoice', 'invoice');
+    }
 }

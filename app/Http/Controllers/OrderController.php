@@ -15,7 +15,7 @@ class OrderController extends Controller
      */
     public function index()
     {
-        $orders = Order::with('contact')->latest()->paginate(5);
+        $orders = Order::with(['contact', 'journal'])->latest()->paginate(5);
 
         return new TransactionResource($orders, true, "Successfully fetched orders");
     }
