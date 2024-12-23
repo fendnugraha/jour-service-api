@@ -126,7 +126,6 @@ class TransactionController extends Controller
             'order_id' => 'required',
             'serviceFee' => 'numeric',
             'discount' => 'numeric',
-            'total' => 'numeric',
             'account' => 'required',
             'payment_method' => 'required',
             'user_id' => 'required',

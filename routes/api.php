@@ -30,4 +30,5 @@ Route::group([
 
     Route::apiResource('orders', OrderController::class);
     Route::apiResource('transactions', TransactionController::class);
+    Route::post('checkout-order', [TransactionController::class, 'checkoutOrder']);
 });
