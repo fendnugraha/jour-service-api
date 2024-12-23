@@ -73,7 +73,7 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
-        $order->load('contact');
+        $order->load(['contact', 'journal']);
         return response()->json([
             'order' => $order,
             'message' => 'Successfully fetched order'
