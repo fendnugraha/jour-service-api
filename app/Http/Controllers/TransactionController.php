@@ -124,7 +124,6 @@ class TransactionController extends Controller
         $order = Order::findOrFail($request->order_id);
         $request->validate([
             'order_id' => 'required',
-            'transaction_type' => 'required',
             'serviceFee' => 'numeric',
             'discount' => 'numeric',
             'total' => 'numeric',
@@ -132,7 +131,6 @@ class TransactionController extends Controller
             'payment_method' => 'required',
             'user_id' => 'required',
             'warehouse_id' => 'required',
-            'contact_id' => 'required',
         ]);
         $journal = new Journal();
         $invoice_num = $journal->sales_journal();
@@ -179,7 +177,7 @@ class TransactionController extends Controller
                         'price' => $item['price'],
                         'cost' => $product->cost,
                         'transaction_type' => 'Sales',
-                        'contact_id' => $request->contact_id,
+                        'contact_id' => $request->contact_id ?? 1,
                         'warehouse_id' => $request->user_id,
                         'user_id' => $request->warehouse_id,
                         'serial_number' => $serial,
@@ -211,11 +209,11 @@ class TransactionController extends Controller
             }
 
             if ($request->discount > 0) {
-                $this->addToJournal($invoice_num, "60111-001", "40100-001", $request->discount, 'Potongan Penjualan', $serial);
+                $this->addToJournal($invoice_num, "60111-001", "40100-001", $request->discount, 'Potongan Penjualan', $serial, null, $request->user_id, $request->warehouse_id);
             }
 
             if ($request->serviceFee != null) {
-                $this->addToJournal($invoice_num, $request->account, "40100-002", $request->serviceFee, 'Jasa Service', $serial);
+                $this->addToJournal($invoice_num, $request->account, "40100-002", $request->serviceFee, 'Jasa Service', $serial, null, $request->user_id, $request->warehouse_id);
             }
 
             DB::commit();

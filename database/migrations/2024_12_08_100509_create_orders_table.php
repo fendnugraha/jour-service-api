@@ -15,11 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('invoice', 60)->nullable();
             $table->string('order_number', 60)->index();
-            $table->string('customer_name', 60);
+            $table->foreignId('contact_id', 60)->constrained('contacts')->onDelete('cascade');
             $table->string('phone_type', 60);
-            $table->string('phone_number', 60);
-            $table->string('address', 255)->nullable();
-            $table->string('status', 60)->default('pending');
+            $table->string('status', 60)->default('Pending');
             $table->string('description', 255);
             $table->foreignId('warehouse_id')->constrained('warehouses')->onDelete('cascade');
             $table->integer('user_id');

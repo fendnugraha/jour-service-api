@@ -56,6 +56,8 @@ class DatabaseSeeder extends Seeder
         Contact::create([
             'name' => 'General',
             'type' => 'Customer',
+            'phone_number' => '08123456789',
+            'address' => 'Bandung, Jawa Barat, ID, 40375',
             'Description' => 'General Customer',
         ]);
 

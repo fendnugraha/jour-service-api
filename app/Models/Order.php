@@ -27,4 +27,9 @@ class Order extends Model
         // Kembalikan format invoice
         return 'ORDER#' . now()->format('dmY')  . auth()->user()->id  . str_pad($kd, 7, '0', STR_PAD_LEFT);
     }
+
+    public function contact()
+    {
+        return $this->belongsTo(Contact::class);
+    }
 }

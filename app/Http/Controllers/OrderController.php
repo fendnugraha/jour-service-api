@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\TransactionResource;
+use App\Models\Contact;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,7 +15,7 @@ class OrderController extends Controller
      */
     public function index()
     {
-        $orders = Order::latest()->paginate(5);
+        $orders = Order::with('contact')->latest()->paginate(5);
 
         return new TransactionResource($orders, true, "Successfully fetched orders");
     }
@@ -32,6 +33,8 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
+        $contact = Contact::where('phone_number', $request->phone_number)->first();
+
         $request->validate([
             'customer_name' => 'required',
             'phone_type' => 'required',
@@ -40,13 +43,20 @@ class OrderController extends Controller
             'description' => 'required|min:5|max:255',
         ]);
 
+        if (!$contact) {
+            $contact = Contact::create([
+                'name' => $request->customer_name,
+                'type' => 'Customer',
+                'phone_number' => $request->phone_number,
+                'address' => $request->address,
+                'description' => 'General Customer',
+            ]);
+        }
         $order_number = Order::getOrderNumber();
         $order = Order::create([
-            'customer_name' => $request->customer_name,
+            'contact_id' => $contact->id,
             'order_number' => $order_number,
             'phone_type' => $request->phone_type,
-            'phone_number' => $request->phone_number,
-            'address' => $request->address,
             'description' => $request->description,
             'warehouse_id' => $request->warehouse_id,
             'user_id' => $request->user_id
@@ -63,6 +73,7 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
+        $order->load('contact');
         return response()->json([
             'order' => $order,
             'message' => 'Successfully fetched order'
