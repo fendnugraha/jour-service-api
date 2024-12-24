@@ -37,4 +37,9 @@ class Order extends Model
     {
         return $this->hasMany(Journal::class, 'invoice', 'invoice');
     }
+
+    public function transaction()
+    {
+        return $this->hasMany(Transaction::class, 'invoice', 'invoice');
+    }
 }

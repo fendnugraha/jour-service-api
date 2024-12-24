@@ -143,6 +143,8 @@ class TransactionController extends Controller
                 'invoice' => $invoice_num,
                 'status' => 'Completed'
             ]);
+            $totalPrice = 0;
+            $totalModal = 0;
 
             if ($request->cart !== null) {
                 foreach ($request->cart as $item) {
@@ -152,33 +154,25 @@ class TransactionController extends Controller
                         continue; // Skip if the product is not found
                     }
 
-                    $jual = ($item['price'] * $item['qty']) - $request->discount;
-                    $modal = $product->cost * $item['qty'];
+                    $jual = ($item['price'] * $item['quantity']);
+                    $modal = $product->cost * $item['quantity'];
                     // $initial_stock = $product->end_stock;
                     // $initial_cost = $product->price;
                     // $initTotal = $initial_stock * $initial_cost;
-
-                    if ($request->payment_method == 'Credit') {
-                        $this->addToReceivable($invoice_num, $request->account, $jual, 'Penjualan Barang (Code:' . $product->code . ') ' . $product->name . ' (' . -$item['qty'] . 'Pcs)', $request->user_id, date('Y-m-d H:i'), $request->dueDate, $request->contact_id);
-                        $rcv = 'Receivable';
-                    }
-
-                    $this->addToJournal($invoice_num, $request->account, "40100-001", $jual, 'Penjualan Barang (Code:' . $product->code . ') ' . $product->name . ' (' . -$item['qty'] . 'Pcs)', $serial, $rcv ?? null, $request->user_id, $request->warehouse_id);
-
-                    $this->addToJournal($invoice_num, "50100-001", "10600-001", $modal, 'Pembelian Barang (Code:' . $product->code . ') ' . $product->name . ' (' . -$item['qty'] . 'Pcs)', $serial, $rcv ?? null, $request->user_id, $request->warehouse_id);
-
+                    $totalPrice += $jual;
+                    $totalModal += $modal;
 
                     $transaction = new Transaction([
                         'date_issued' => now(),
                         'invoice' => $invoice_num, // Ensure $invoice is defined
                         'product_id' => $product->id,
-                        'quantity' => -$item['qty'],
+                        'quantity' => -$item['quantity'],
                         'price' => $item['price'],
                         'cost' => $product->cost,
                         'transaction_type' => 'Sales',
                         'contact_id' => $request->contact_id ?? 1,
-                        'warehouse_id' => $request->user_id,
-                        'user_id' => $request->warehouse_id,
+                        'warehouse_id' => $request->warehouse_id,
+                        'user_id' => $request->user_id,
                         'serial_number' => $serial,
                     ]);
 
@@ -205,14 +199,25 @@ class TransactionController extends Controller
                         $warehouseStock->save();
                     }
                 }
+                $totalPriceAfterDiscount = $totalPrice - $request->discount;
+                $this->addToJournal($invoice_num, $request->account, "40100-001", $totalPriceAfterDiscount, 'Penjualan Barang', $serial, $rcv ?? null, $request->user_id, $request->warehouse_id);
+
+                $this->addToJournal($invoice_num, "50100-001", "10600-001", $totalModal, 'Pembelian Barang', $serial, $rcv ?? null, $request->user_id, $request->warehouse_id);
+
+                if ($request->payment_method == 'Credit') {
+                    $this->addToReceivable($invoice_num, $request->account, $totalPrice, 'Penjualan Barang', $request->user_id, date('Y-m-d H:i'), $request->dueDate, $request->contact_id);
+                    $rcv = 'Receivable';
+                }
             }
 
             if ($request->discount > 0) {
                 $this->addToJournal($invoice_num, "60111-001", "40100-001", $request->discount, 'Potongan Penjualan', $serial, null, $request->user_id, $request->warehouse_id);
             }
 
+            $serviceFee = $totalPrice == 0 && $request->discount > 0 ? $request->serviceFee - $request->discount : $request->serviceFee;
+
             if ($request->serviceFee != null) {
-                $this->addToJournal($invoice_num, $request->account, "40100-002", $request->serviceFee, 'Jasa Service', $serial, null, $request->user_id, $request->warehouse_id);
+                $this->addToJournal($invoice_num, $request->account, "40100-002", $serviceFee, 'Jasa Service', $serial, null, $request->user_id, $request->warehouse_id);
             }
 
             DB::commit();
