@@ -22,6 +22,7 @@ class ChartOfAccountSeeder extends Seeder
             ['acc_code' => '10200-004', 'acc_name' => 'Bank BNI (Headquarter)', 'account_id' => 2, 'st_balance' => 0, 'warehouse_id' => 1, 'is_locked' => false],
             ['acc_code' => '10400-001', 'acc_name' => 'Piutang Usaha', 'account_id' => 4, 'st_balance' => 0, 'warehouse_id' => null, 'is_locked' => true],
             ['acc_code' => '10400-002', 'acc_name' => 'Piutang Karyawan', 'account_id' => 4, 'st_balance' => 0, 'warehouse_id' => null, 'is_locked' => true],
+            ['acc_code' => '10400-003', 'acc_name' => 'Piutang Service Belum Diambil', 'account_id' => 4, 'st_balance' => 0, 'warehouse_id' => null, 'is_locked' => true],
             ['acc_code' => '10600-001', 'acc_name' => 'Persediaan Barang', 'account_id' => 6, 'st_balance' => 0, 'warehouse_id' => null, 'is_locked' => true],
             ['acc_code' => '20100-001', 'acc_name' => 'Hutang Usaha', 'account_id' => 19, 'st_balance' => 0, 'warehouse_id' => null, 'is_locked' => true],
             ['acc_code' => '20100-002', 'acc_name' => 'Deposit Customer', 'account_id' => 19, 'st_balance' => 0, 'warehouse_id' => null, 'is_locked' => false],

@@ -95,8 +95,9 @@ class TransactionController extends Controller
         //
     }
 
-    public function addToReceivable($invoice, $account, $amount, $description, $user, $dateIssued, $dueDate, $contact_id)
+    public function addToReceivable($invoice, $account, $amount, $description, $user, $dateIssued, $dueDate = 30, int $contact_id)
     {
+        $dueDate = $dueDate ?? 30;
         DB::beginTransaction();
         try {
             Receivable::create([
@@ -109,13 +110,24 @@ class TransactionController extends Controller
                 'payment_status' => 0,
                 'payment_nth' => 0,
                 'contact_id' => $contact_id,
-                'user_id' => $user->id,
+                'user_id' => $user,
                 'account_code' => $account
             ]);
 
             DB::commit();
+            Log::info('Add to Receivable', [
+                'invoice' => $invoice,
+                'account' => $account,
+                'amount' => $amount,
+                'description' => $description,
+                'user' => $user,
+                'dateIssued' => $dateIssued,
+                'dueDate' => $dueDate,
+                'contact_id' => $contact_id,
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error($e->getMessage());
         }
     }
 
@@ -134,6 +146,7 @@ class TransactionController extends Controller
         $journal = new Journal();
         $invoice_num = $journal->sales_journal();
         $serial = Transaction::generateSerialNumber('SO', $request->user_id);
+        $rcv = $request->payment_method == 'Credit' ? 'Receivable' : null;
 
         DB::beginTransaction();
 
@@ -141,12 +154,12 @@ class TransactionController extends Controller
 
             $order->update([
                 'invoice' => $invoice_num,
-                'status' => 'Completed'
+                'status' => 'Finished'
             ]);
             $totalPrice = 0;
             $totalModal = 0;
 
-            if ($request->cart !== null) {
+            if (!empty($request->cart)) {
                 foreach ($request->cart as $item) {
                     // dd($item, $request->account, $request->payment);
                     $product = Product::find($item['id']);
@@ -202,12 +215,22 @@ class TransactionController extends Controller
                 $totalPriceAfterDiscount = $totalPrice - $request->discount;
                 $this->addToJournal($invoice_num, $request->account, "40100-001", $totalPriceAfterDiscount, 'Penjualan Barang', $serial, $rcv ?? null, $request->user_id, $request->warehouse_id);
 
-                $this->addToJournal($invoice_num, "50100-001", "10600-001", $totalModal, 'Pembelian Barang', $serial, $rcv ?? null, $request->user_id, $request->warehouse_id);
+                $this->addToJournal($invoice_num, "50100-001", "10600-001", $totalModal, 'Penjualan Barang', $serial, $rcv ?? null, $request->user_id, $request->warehouse_id);
+            }
 
-                if ($request->payment_method == 'Credit') {
-                    $this->addToReceivable($invoice_num, $request->account, $totalPrice, 'Penjualan Barang', $request->user_id, date('Y-m-d H:i'), $request->dueDate, $request->contact_id);
-                    $rcv = 'Receivable';
-                }
+            if (strcasecmp($request->payment_method, 'Credit') === 0) {
+                $this->addToReceivable(
+                    $invoice_num,
+                    $request->account,
+                    $totalPrice + $request->serviceFee,
+                    'Penjualan Barang',
+                    $request->user_id,
+                    now(),
+                    null, // Nilai null diteruskan
+                    $request->contact_id
+                );
+
+                $rcv = 'Receivable';
             }
 
             if ($request->discount > 0) {
@@ -216,8 +239,8 @@ class TransactionController extends Controller
 
             $serviceFee = $totalPrice == 0 && $request->discount > 0 ? $request->serviceFee - $request->discount : $request->serviceFee;
 
-            if ($request->serviceFee != null) {
-                $this->addToJournal($invoice_num, $request->account, "40100-002", $serviceFee, 'Jasa Service', $serial, null, $request->user_id, $request->warehouse_id);
+            if ($serviceFee > 0) {
+                $this->addToJournal($invoice_num, $request->account, "40100-002", $serviceFee, 'Jasa Service', $serial, $rcv ?? null, $request->user_id, $request->warehouse_id);
             }
 
             DB::commit();
