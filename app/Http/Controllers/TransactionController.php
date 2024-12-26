@@ -147,6 +147,7 @@ class TransactionController extends Controller
         $invoice_num = $journal->sales_journal();
         $serial = Transaction::generateSerialNumber('SO', $request->user_id);
         $rcv = $request->payment_method == 'Credit' ? 'Receivable' : null;
+        $orderStatus = $request->payment_method == 'Credit' ? 'Finished' : 'Completed';
 
         DB::beginTransaction();
 
@@ -154,8 +155,9 @@ class TransactionController extends Controller
 
             $order->update([
                 'invoice' => $invoice_num,
-                'status' => 'Finished'
+                'status' => $orderStatus,
             ]);
+
             $totalPrice = 0;
             $totalModal = 0;
 
