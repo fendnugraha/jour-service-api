@@ -6,13 +6,22 @@ use App\Models\Journal;
 use Illuminate\Http\Request;
 use App\Models\ChartOfAccount;
 use App\Http\Resources\ChartOfAccountResource;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator as FacadesValidator;
 
 class ChartOfAccountController extends Controller
 {
+    public $startDate;
+    public $endDate;
     /**
      * Display a listing of the resource.
      */
+    public function __construct()
+    {
+        $this->startDate = Carbon::now()->startOfMonth();
+        $this->endDate = Carbon::now()->endOfMonth();
+    }
+
     public function index()
     {
         $chartOfAccounts = ChartOfAccount::with(['account', 'warehouse'])->orderBy('acc_code')->paginate(10);
@@ -160,5 +169,66 @@ class ChartOfAccountController extends Controller
     {
         $chartOfAccounts = ChartOfAccount::whereIn('account_id', [1, 2])->get();
         return new ChartOfAccountResource($chartOfAccounts, true, "Successfully fetched chart of accounts");
+    }
+
+    public function profitLossReport()
+    {
+        $journal = new Journal();
+        // $journal->profitLossCount('0000-00-00', $endDate);
+
+        $transactions = $journal->with(['debt', 'cred'])
+            ->selectRaw('debt_code, cred_code, SUM(amount) as total')
+            ->whereBetween('date_issued', [$this->startDate, $this->endDate])
+            ->groupBy('debt_code', 'cred_code')
+            ->get();
+
+        $chartOfAccounts = ChartOfAccount::with(['account'])->get();
+
+        foreach ($chartOfAccounts as $value) {
+            $debit = $transactions->where('debt_code', $value->acc_code)->sum('total');
+            $credit = $transactions->where('cred_code', $value->acc_code)->sum('total');
+
+            $value->balance = ($value->account->status == "D") ? ($value->st_balance + $debit - $credit) : ($value->st_balance + $credit - $debit);
+        }
+
+        $revenue = $chartOfAccounts->whereIn('account_id', \range(27, 30))->groupBy('account_id');
+        $cost = $chartOfAccounts->whereIn('account_id', \range(31, 32))->groupBy('account_id');
+        $expense = $chartOfAccounts->whereIn('account_id', \range(33, 45))->groupBy('account_id');
+
+        $profitLoss = [
+            'revenue' => [
+                'total' => $revenue->flatten()->sum('balance'),
+                'accounts' => $revenue->map(function ($r) {
+                    return [
+                        'acc_name' => $r->first()->account->name,
+                        'balance' => intval($r->sum('balance'))
+                    ];
+                })->toArray()
+            ],
+            'cost' => [
+                'total' => $cost->flatten()->sum('balance'),
+                'accounts' => $cost->map(function ($c) {
+                    return [
+                        'acc_name' => $c->first()->account->name,
+                        'balance' => intval($c->sum('balance'))
+                    ];
+                })->toArray()
+            ],
+            'expense' => [
+                'total' => $expense->flatten()->sum('balance'),
+                'accounts' => $expense->map(function ($e) {
+                    return [
+                        'acc_name' => $e->first()->account->name,
+                        'balance' => intval($e->sum('balance'))
+                    ];
+                })->toArray()
+            ]
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Successfully fetched profit and loss',
+            'data' => $profitLoss
+        ]);
     }
 }
