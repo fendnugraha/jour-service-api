@@ -15,7 +15,7 @@ class OrderController extends Controller
      */
     public function index()
     {
-        $orders = Order::with(['contact', 'journal'])->latest()->paginate(5);
+        $orders = Order::with(['contact', 'journal.transaction', 'warehouse'])->latest()->paginate(5);
 
         return new TransactionResource($orders, true, "Successfully fetched orders");
     }
@@ -58,8 +58,8 @@ class OrderController extends Controller
             'order_number' => $order_number,
             'phone_type' => $request->phone_type,
             'description' => $request->description,
-            'warehouse_id' => $request->warehouse_id,
-            'user_id' => $request->user_id
+            'warehouse_id' => auth()->user()->role->warehouse_id,
+            'user_id' => auth()->user()->id
         ]);
 
         return response()->json([

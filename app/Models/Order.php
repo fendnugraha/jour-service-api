@@ -42,4 +42,9 @@ class Order extends Model
     {
         return $this->hasMany(Transaction::class, 'invoice', 'invoice');
     }
+
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouse::class);
+    }
 }

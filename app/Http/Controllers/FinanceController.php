@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Payable;
+use App\Models\Finance;
 use Illuminate\Http\Request;
 
-class PayableController extends Controller
+class FinanceController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -34,7 +34,7 @@ class PayableController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Payable $payable)
+    public function show(Finance $finance)
     {
         //
     }
@@ -42,7 +42,7 @@ class PayableController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Payable $payable)
+    public function edit(Finance $finance)
     {
         //
     }
@@ -50,7 +50,7 @@ class PayableController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Payable $payable)
+    public function update(Request $request, Finance $finance)
     {
         //
     }
@@ -58,7 +58,7 @@ class PayableController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Payable $payable)
+    public function destroy(Finance $finance)
     {
         //
     }

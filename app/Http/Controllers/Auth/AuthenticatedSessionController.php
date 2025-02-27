@@ -15,25 +15,11 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): Response
     {
-        // Lakukan autentikasi dengan login request
         $request->authenticate();
 
-        // Regenerasi session ID dan CSRF token
         $request->session()->regenerate();
-        $request->session()->regenerateToken();
 
-        // Ambil data pengguna setelah login
-        $user = Auth::user()->load('role');
-
-        // Membuat token menggunakan Laravel Sanctum
-        $token = $user->createToken('Jour-api')->plainTextToken;
-
-        // Kembalikan respons dalam bentuk Response (bukan JSON)
-        return response([
-            'message' => 'Login successful',
-            'user' => $user,
-            'token' => $token // Token untuk autentikasi API
-        ], 200); // Mengembalikan status code 200
+        return response()->noContent();
     }
 
     /**
@@ -41,24 +27,12 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): Response
     {
-        Auth::user()->tokens->each(function ($token) {
-            $token->delete();  // Menghapus token yang ada
-        });
-
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
 
         $request->session()->regenerateToken();
 
-        // // Hapus cookie XSRF-TOKEN dan laravel_session
-
-        return response()->noContent()
-            ->withCookie(cookie()->forget('XSRF-TOKEN', '/', env('APP_URL'), true))
-            ->withCookie(cookie()->forget('jourapps_session', '/', env('APP_URL'), true));
-
-        return response([
-            'message' => 'Logout successful'
-        ]);
+        return response()->noContent();
     }
 }

@@ -32,7 +32,7 @@ class ChartOfAccountSeeder extends Seeder
             ['acc_code' => '30100-002', 'acc_name' => 'Laba Rugi', 'account_id' => 26, 'st_balance' => 0, 'warehouse_id' => null, 'is_locked' => true],
             ['acc_code' => '30100-003', 'acc_name' => 'Modal Diambil (Prive)', 'account_id' => 26, 'st_balance' => 0, 'warehouse_id' => null, 'is_locked' => true],
             ['acc_code' => '40100-001', 'acc_name' => 'Penjualan Barang & Jasa', 'account_id' => 27, 'st_balance' => 0, 'warehouse_id' => null, 'is_locked' => true],
-            ['acc_code' => '40100-002', 'acc_name' => 'Pendapatan Jasa Service Teknisi', 'account_id' => 27, 'st_balance' => 0, 'warehouse_id' => null, 'is_locked' => false],
+            ['acc_code' => '40100-002', 'acc_name' => 'Pendapatan Jasa Service Teknisi', 'account_id' => 27, 'st_balance' => 0, 'warehouse_id' => null, 'is_locked' => true],
             ['acc_code' => '40200-001', 'acc_name' => 'Potongan Pembelian', 'account_id' => 28, 'st_balance' => 0, 'warehouse_id' => null, 'is_locked' => true],
             ['acc_code' => '40300-001', 'acc_name' => 'Pendapatan Lainnya', 'account_id' => 29, 'st_balance' => 0, 'warehouse_id' => null, 'is_locked' => true],
             ['acc_code' => '40300-002', 'acc_name' => 'Bunga Bank', 'account_id' => 29, 'st_balance' => 0, 'warehouse_id' => null, 'is_locked' => true],
